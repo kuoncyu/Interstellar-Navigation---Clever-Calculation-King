@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星際導航：極速巧算</title>
+    <style>
+        :root {
+            --neon-blue: #00d2ff;
+            --neon-pink: #ff007f;
+            --space-bg: #0b0e14;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            color: white;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 玻璃擬態容器 */
+        .game-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 210, 255, 0.3);
+        }
+
+        .screen { display: none; animation: fadeIn 0.5s; }
+        .active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { font-size: 2rem; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+
+        /* 規則區 */
+        .rule-card {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid var(--neon-pink);
+            line-height: 1.6;
+        }
+
+        /* 計時器 */
+        .timer-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            border: 1px solid var(--neon-blue);
+        }
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
+            box-shadow: 0 0 10px var(--neon-blue);
+            transition: width 0.1s linear;
+        }
+
+        /* 題目與輸入 */
+        #question { font-size: 3.5rem; margin: 15px 0; font-weight: bold; letter-spacing: 2px; }
+        #user-input {
+            font-size: 2.5rem;
+            color: var(--neon-pink);
+            min-height: 50px;
+            border-bottom: 3px solid var(--neon-blue);
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        /* 虛擬鍵盤 */
+        .keyboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .alpha-kb { grid-template-columns: repeat(7, 1fr); gap: 5px; font-size: 0.7em; }
+        
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 15px var(--neon-blue); }
+        button:active { transform: scale(0.9); }
+
+        .start-btn {
+            background: var(--neon-blue);
+            color: black;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+
+        .stats { display: flex; justify-content: space-around; font-size: 1rem; color: #aaa; }
+        
+        table { width: 100%; margin-top: 15px; border-radius: 10px; overflow: hidden; }
+        th { background: var(--neon-blue); color: black; padding: 10px; }
+        td { background: rgba(255,255,255,0.05); padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="game-card">
+    <div id="start-screen" class="screen active">
+        <h1>🌌 星際導航：巧算王</h1>
+        <p>導航員，請輸入代號以解鎖蟲洞航道：</p>
+        <div id="name-display" style="font-size: 1.5rem; color: var(--neon-pink); margin-bottom: 10px;">_</div>
+        <div class="keyboard alpha-kb" id="alpha-kb"></div>
+        
+        <div class="rule-card">
+            <strong>🛰 導航密碼（首同尾合十）</strong><br>
+            當十位數相同且個位數相加為 10：<br>
+            1. <b>尾相乘：</b>如 4×6=24 (密碼後兩位)<br>
+            2. <b>首×(首+1)：</b>如 1×(1+1)=2 (密碼前位)<br>
+            <i>例：14 × 16 = 224</i>
+        </div>
+        <button class="start-btn" onclick="startGame()">啟動跳躍引擎</button>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div class="stats">
+            <span>難度等級: <b id="level-val" style="color:var(--neon-blue)">1</b></span>
+            <span>成功導航: <b id="score-val" style="color:var(--neon-pink)">0</b></span>
+        </div>
+        <div class="timer-container"><div id="timer-bar"></div></div>
+        <div id="question">-- × --</div>
+        <div id="user-input"></div>
+        <div class="keyboard" id="num-kb">
+            </div>
+    </div>
+
+    <div id="end-screen" class="screen">
+        <h2 id="final-msg" style="color:var(--neon-pink)">航道關閉！</h2>
+        <p>導航次數：<span id="final-score" style="font-size:2rem">0</span></p>
+        <h3 style="color:var(--neon-blue)">🚀 頂尖導航員名錄</h3>
+        <table id="leaderboard">
+            <thead><tr><th>名次</th><th>代號</th><th>得分</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <button class="start-btn" onclick="location.reload()">重新啟動引擎</button>
+    </div>
+</div>
+
+<script>
+    let playerName = "";
+    let score = 0;
+    let level = 1;
+    let initialTime = 10.0;
+    let timeLeft = 10.0;
+    let currentAnswer = "";
+    let timerInterval;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(freq, type, dur, vol=0.1) {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(vol, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + dur);
+    }
+
+    // 初始化鍵盤
+    function initKeyboards() {
+        const alphaDiv = document.getElementById('alpha-kb');
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').forEach(l => {
+            const b = document.createElement('button');
+            b.innerText = l;
+            b.onclick = () => { if(playerName.length < 8) playerName += l; updateName(); };
+            alphaDiv.appendChild(b);
+        });
+        const del = document.createElement('button');
+        del.innerText = "←"; del.onclick = () => { playerName = playerName.slice(0,-1); updateName(); };
+        alphaDiv.appendChild(del);
+
+        const numDiv = document.getElementById('num-kb');
+        [1,2,3,4,5,6,7,8,9,'C',0,'←'].forEach(v => {
+            const b = document.createElement('button');
+            b.innerText = v;
+            b.onclick = () => {
+                if(v === 'C') clearInput();
+                else if(v === '←') backspace();
+                else pressNum(v);
+            };
+            numDiv.appendChild(b);
+        });
+    }
+
+    function updateName() { document.getElementById('name-display').innerText = playerName || "_"; }
+
+    function startGame() {
+        if(!playerName) playerName = "PILOT";
+        showScreen('game-screen');
+        nextQuestion();
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function nextQuestion() {
+        let tens = Math.floor(Math.random() * 9) + 1;
+        let u1 = Math.floor(Math.random() * 9) + 1;
+        let u2 = 10 - u1;
+        currentAnswer = ((tens * 10 + u1) * (tens * 10 + u2)).toString();
+        
+        document.getElementById('question').innerText = `${tens}${u1} × ${tens}${u2}`;
+        document.getElementById('user-input').innerText = "";
+        resetTimer();
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        timeLeft = initialTime;
+        const bar = document.getElementById('timer-bar');
+        timerInterval = setInterval(() => {
+            timeLeft -= 0.05;
+            let percent = (timeLeft / initialTime) * 100;
+            bar.style.width = percent + "%";
+            
+            if(timeLeft < 3) {
+                bar.style.background = "var(--neon-pink)";
+                if(Math.floor(timeLeft * 10) % 2 === 0) playSound(300, 'square', 0.05, 0.05);
+            }
+            if(timeLeft <= 0) endGame();
+        }, 50);
+    }
+
+    function pressNum(n) {
+        const disp = document.getElementById('user-input');
+        disp.innerText += n;
+        if(disp.innerText === currentAnswer) {
+            score++;
+            playSound(800, 'sine', 0.2);
+            document.getElementById('score-val').innerText = score;
+            if(score % 10 === 0) {
+                level++;
+                document.getElementById('level-val').innerText = level;
+                if(initialTime > 2) initialTime -= 0.5;
+            }
+            nextQuestion();
+        } else if (disp.innerText.length >= currentAnswer.length) {
+            setTimeout(() => disp.innerText = "", 150);
+            playSound(150, 'sawtooth', 0.3);
+        }
+    }
+
+    function clearInput() { document.getElementById('user-input').innerText = ""; }
+    function backspace() { 
+        let t = document.getElementById('user-input').innerText;
+        document.getElementById('user-input').innerText = t.slice(0, -1);
+    }
+
+    function endGame() {
+        clearInterval(timerInterval);
+        playSound(100, 'sawtooth', 0.8, 0.2);
+        showScreen('end-screen');
+        document.getElementById('final-score').innerText = score;
+        saveScore(playerName, score);
+        showLeaderboard();
+    }
+
+    function saveScore(n, s) {
+        let scs = JSON.parse(localStorage.getItem('spaceMath') || '[]');
+        scs.push({n, s});
+        scs.sort((a,b) => b.s - a.s);
+        localStorage.setItem('spaceMath', JSON.stringify(scs.slice(0, 5)));
+    }
+
+    function showLeaderboard() {
+        let scs = JSON.parse(localStorage.getItem('spaceMath') || '[]');
+        document.querySelector('#leaderboard tbody').innerHTML = scs.map((x, i) => 
+            `<tr><td>${i+1}</td><td>${x.n}</td><td>${x.s}</td></tr>`).join('');
+    }
+
+    initKeyboards();
+</script>
+</body>
+</html>
