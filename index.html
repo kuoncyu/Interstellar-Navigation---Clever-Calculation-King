@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>星際導航：極速巧算</title>
+    <title>星際導航員：極速巧算</title>
     <style>
         :root {
             --neon-blue: #00d2ff;
@@ -32,7 +32,7 @@
             border-radius: 20px;
             padding: 30px;
             width: 90%;
-            max-width: 500px;
+            max-width: 550px;
             text-align: center;
             box-shadow: 0 0 40px rgba(0, 210, 255, 0.3);
         }
@@ -42,17 +42,18 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        h1 { font-size: 2rem; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+        h1 { font-size: 2.2rem; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); margin-top: 0; }
 
         /* 規則區 */
         .rule-card {
             text-align: left;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.5);
             padding: 15px;
             border-radius: 10px;
             margin: 15px 0;
             border-left: 4px solid var(--neon-pink);
-            line-height: 1.6;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
 
         /* 計時器 */
@@ -73,12 +74,12 @@
             transition: width 0.1s linear;
         }
 
-        /* 題目與輸入 */
-        #question { font-size: 3.5rem; margin: 15px 0; font-weight: bold; letter-spacing: 2px; }
+        /* 題目顯示 */
+        #question { font-size: 4rem; margin: 10px 0; font-weight: bold; letter-spacing: 3px; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
         #user-input {
-            font-size: 2.5rem;
+            font-size: 3rem;
             color: var(--neon-pink);
-            min-height: 50px;
+            min-height: 60px;
             border-bottom: 3px solid var(--neon-blue);
             margin-bottom: 20px;
             text-shadow: 0 0 10px var(--neon-pink);
@@ -106,13 +107,16 @@
             color: black;
             font-weight: bold;
             width: 100%;
-            margin-top: 20px;
-            font-size: 1.2rem;
+            margin-top: 15px;
+            font-size: 1.3rem;
+            padding: 15px;
+            border: none;
+            box-shadow: 0 0 20px var(--neon-blue);
         }
 
-        .stats { display: flex; justify-content: space-around; font-size: 1rem; color: #aaa; }
+        .stats { display: flex; justify-content: space-around; font-size: 1.1rem; margin-bottom: 10px; }
         
-        table { width: 100%; margin-top: 15px; border-radius: 10px; overflow: hidden; }
+        table { width: 100%; margin-top: 15px; border-radius: 10px; overflow: hidden; border-collapse: collapse; }
         th { background: var(--neon-blue); color: black; padding: 10px; }
         td { background: rgba(255,255,255,0.05); padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
     </style>
@@ -122,36 +126,35 @@
 <div class="game-card">
     <div id="start-screen" class="screen active">
         <h1>🌌 星際導航：巧算王</h1>
-        <p>導航員，請輸入代號以解鎖蟲洞航道：</p>
-        <div id="name-display" style="font-size: 1.5rem; color: var(--neon-pink); margin-bottom: 10px;">_</div>
+        <p style="margin-bottom: 5px;">導航員，請輸入代號：</p>
+        <div id="name-display" style="font-size: 1.8rem; color: var(--neon-pink); margin-bottom: 10px; font-weight: bold;">_</div>
         <div class="keyboard alpha-kb" id="alpha-kb"></div>
         
         <div class="rule-card">
             <strong>🛰 導航密碼（首同尾合十）</strong><br>
-            當十位數相同且個位數相加為 10：<br>
-            1. <b>尾相乘：</b>如 4×6=24 (密碼後兩位)<br>
-            2. <b>首×(首+1)：</b>如 1×(1+1)=2 (密碼前位)<br>
-            <i>例：14 × 16 = 224</i>
+            當十位數相同，且個位數相加為 10：<br>
+            1. <b>尾相乘：</b>如 4×6=24 (密碼後兩位，不滿10補0)<br>
+            2. <b>首 × (首+1)：</b>如 1×(1+1)=2 (密碼前位)<br>
+            <i>範例：14 × 16 = 224 | 32 × 38 = 1216</i>
         </div>
         <button class="start-btn" onclick="startGame()">啟動跳躍引擎</button>
     </div>
 
     <div id="game-screen" class="screen">
         <div class="stats">
-            <span>難度等級: <b id="level-val" style="color:var(--neon-blue)">1</b></span>
-            <span>成功導航: <b id="score-val" style="color:var(--neon-pink)">0</b></span>
+            <span>難度: <b id="level-val" style="color:var(--neon-blue)">1</b></span>
+            <span>導航成功: <b id="score-val" style="color:var(--neon-pink)">0</b></span>
         </div>
         <div class="timer-container"><div id="timer-bar"></div></div>
         <div id="question">-- × --</div>
         <div id="user-input"></div>
-        <div class="keyboard" id="num-kb">
-            </div>
+        <div class="keyboard" id="num-kb"></div>
     </div>
 
     <div id="end-screen" class="screen">
-        <h2 id="final-msg" style="color:var(--neon-pink)">航道關閉！</h2>
-        <p>導航次數：<span id="final-score" style="font-size:2rem">0</span></p>
-        <h3 style="color:var(--neon-blue)">🚀 頂尖導航員名錄</h3>
+        <h2 id="final-msg" style="color:var(--neon-pink); font-size: 2rem;">航道關閉！</h2>
+        <p>最終得分：<span id="final-score" style="font-size:3rem; color:var(--neon-blue)">0</span></p>
+        <h3 style="color:var(--neon-blue); margin-top: 20px;">🚀 頂尖導航員名錄</h3>
         <table id="leaderboard">
             <thead><tr><th>名次</th><th>代號</th><th>得分</th></tr></thead>
             <tbody></tbody>
@@ -161,28 +164,51 @@
 </div>
 
 <script>
+    // --- 遊戲狀態 ---
     let playerName = "";
     let score = 0;
     let level = 1;
-    let initialTime = 10.0;
+    let initialTime = 10.0; // 初始 10 秒
     let timeLeft = 10.0;
     let currentAnswer = "";
     let timerInterval;
+    let bgmInterval;
 
+    // --- 音訊系統 (Web Audio API) ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    function playSound(freq, type, dur, vol=0.1) {
+    function playTone(freq, type, dur, vol = 0.1) {
         const osc = audioCtx.createOscillator();
         const g = audioCtx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         g.gain.setValueAtTime(vol, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
         osc.connect(g); g.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + dur);
     }
 
-    // 初始化鍵盤
+    function playBGM() {
+        let beat = 0;
+        bgmInterval = setInterval(() => {
+            const now = audioCtx.currentTime;
+            // 基礎節奏
+            if (beat % 4 === 0) playTone(60, 'sine', 0.2, 0.2); // 重音
+            playTone([110, 130, 146, 164][beat % 4], 'triangle', 0.15, 0.05); // 貝斯
+            // 難度越高，點綴音越多
+            if (Math.random() > 0.8) playTone(880, 'sine', 0.05, 0.02);
+            beat++;
+        }, 250);
+    }
+
+    function soundCorrect() { 
+        playTone(523, 'sine', 0.1, 0.2); 
+        setTimeout(() => playTone(659, 'sine', 0.2, 0.2), 100); 
+    }
+
+    function soundFail() { playTone(100, 'sawtooth', 0.6, 0.3); }
+
+    // --- 鍵盤初始化 ---
     function initKeyboards() {
         const alphaDiv = document.getElementById('alpha-kb');
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').forEach(l => {
@@ -192,7 +218,8 @@
             alphaDiv.appendChild(b);
         });
         const del = document.createElement('button');
-        del.innerText = "←"; del.onclick = () => { playerName = playerName.slice(0,-1); updateName(); };
+        del.innerText = "DEL"; del.style.gridColumn = "span 2";
+        del.onclick = () => { playerName = playerName.slice(0,-1); updateName(); };
         alphaDiv.appendChild(del);
 
         const numDiv = document.getElementById('num-kb');
@@ -200,8 +227,11 @@
             const b = document.createElement('button');
             b.innerText = v;
             b.onclick = () => {
-                if(v === 'C') clearInput();
-                else if(v === '←') backspace();
+                if(v === 'C') document.getElementById('user-input').innerText = "";
+                else if(v === '←') {
+                    let t = document.getElementById('user-input').innerText;
+                    document.getElementById('user-input').innerText = t.slice(0, -1);
+                }
                 else pressNum(v);
             };
             numDiv.appendChild(b);
@@ -210,7 +240,10 @@
 
     function updateName() { document.getElementById('name-display').innerText = playerName || "_"; }
 
+    // --- 核心邏輯 ---
     function startGame() {
+        audioCtx.resume();
+        playBGM();
         if(!playerName) playerName = "PILOT";
         showScreen('game-screen');
         nextQuestion();
@@ -225,7 +258,8 @@
         let tens = Math.floor(Math.random() * 9) + 1;
         let u1 = Math.floor(Math.random() * 9) + 1;
         let u2 = 10 - u1;
-        currentAnswer = ((tens * 10 + u1) * (tens * 10 + u2)).toString();
+        let ans = (tens * (tens + 1)) * 100 + (u1 * u2);
+        currentAnswer = ans.toString();
         
         document.getElementById('question').innerText = `${tens}${u1} × ${tens}${u2}`;
         document.getElementById('user-input').innerText = "";
@@ -243,7 +277,9 @@
             
             if(timeLeft < 3) {
                 bar.style.background = "var(--neon-pink)";
-                if(Math.floor(timeLeft * 10) % 2 === 0) playSound(300, 'square', 0.05, 0.05);
+                if(Math.floor(timeLeft * 10) % 2 === 0) playTone(1200, 'sine', 0.02, 0.05);
+            } else {
+                bar.style.background = "linear-gradient(90deg, var(--neon-blue), var(--neon-pink))";
             }
             if(timeLeft <= 0) endGame();
         }, 50);
@@ -252,31 +288,33 @@
     function pressNum(n) {
         const disp = document.getElementById('user-input');
         disp.innerText += n;
+        
+        // 自動檢查
         if(disp.innerText === currentAnswer) {
             score++;
-            playSound(800, 'sine', 0.2);
+            soundCorrect();
             document.getElementById('score-val').innerText = score;
+            // 每10題難度增加
             if(score % 10 === 0) {
                 level++;
                 document.getElementById('level-val').innerText = level;
-                if(initialTime > 2) initialTime -= 0.5;
+                if(initialTime > 2.0) initialTime -= 0.5;
             }
             nextQuestion();
         } else if (disp.innerText.length >= currentAnswer.length) {
-            setTimeout(() => disp.innerText = "", 150);
-            playSound(150, 'sawtooth', 0.3);
+            // 位數到了但錯了，閃爍紅字後清空
+            disp.style.color = "red";
+            setTimeout(() => {
+                disp.innerText = "";
+                disp.style.color = "var(--neon-pink)";
+            }, 200);
         }
-    }
-
-    function clearInput() { document.getElementById('user-input').innerText = ""; }
-    function backspace() { 
-        let t = document.getElementById('user-input').innerText;
-        document.getElementById('user-input').innerText = t.slice(0, -1);
     }
 
     function endGame() {
         clearInterval(timerInterval);
-        playSound(100, 'sawtooth', 0.8, 0.2);
+        clearInterval(bgmInterval);
+        soundFail();
         showScreen('end-screen');
         document.getElementById('final-score').innerText = score;
         saveScore(playerName, score);
@@ -284,14 +322,14 @@
     }
 
     function saveScore(n, s) {
-        let scs = JSON.parse(localStorage.getItem('spaceMath') || '[]');
+        let scs = JSON.parse(localStorage.getItem('math_blitz_scores') || '[]');
         scs.push({n, s});
         scs.sort((a,b) => b.s - a.s);
-        localStorage.setItem('spaceMath', JSON.stringify(scs.slice(0, 5)));
+        localStorage.setItem('math_blitz_scores', JSON.stringify(scs.slice(0, 5)));
     }
 
     function showLeaderboard() {
-        let scs = JSON.parse(localStorage.getItem('spaceMath') || '[]');
+        let scs = JSON.parse(localStorage.getItem('math_blitz_scores') || '[]');
         document.querySelector('#leaderboard tbody').innerHTML = scs.map((x, i) => 
             `<tr><td>${i+1}</td><td>${x.n}</td><td>${x.s}</td></tr>`).join('');
     }
